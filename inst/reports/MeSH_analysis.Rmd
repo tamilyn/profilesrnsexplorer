@@ -1,0 +1,169 @@
+---
+title: "MeSH Analysis"
+author: "Tami L Crawford"
+date: "4/18/2018"
+output: 
+  html_document:
+    fig_caption: yes
+    number_sections: yes
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
+params:
+  start_year: 2012
+  end_year: 2016
+  filter_by_grant_start: 0
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# Overview
+
+Generate some data based on MeSH terms.
+
+Report parameters: 
+
+* Start year: `r params$start_year`
+* End year: `r params$end_year`
+
+# Load data 
+
+For this analysis, this data is used
+
+* *pilot_grant_status*  - contains person identifiers (personid, emailaddr, name) allow with grant status (funded, unfunded, nonapplicant).  If funded, grant start date.
+
+* *author_pubs* - contains the publications for all applicants (funded and unfunded), including pmid, title
+
+* *mesh* - contains the major and minor subject areas, mesh description and mesh group for all publications
+
+```{r load_data}
+library(profilesrnsexplorer)
+library(tidyverse)
+
+data(mesh)
+data(pilot_grant_status)
+data(author_pubs)
+```
+
+
+## Select subset of people to include (Part 1)
+
+We only want to consider the grant applicants.
+
+Within those grant applicants, we will divide into groups based on grant status (funded/unfunded).
+
+The sampling method will use these groups to select equal numbers from each group.
+
+
+```{r select_people}
+applicants <- pilot_grant_status %>% 
+  filter(grant_status %in% c("funded", "unfunded"))
+
+knitr::kable(applicants %>% 
+  count(grant_status, sort = TRUE))
+```
+
+There are `r nrow(applicants)`
+
+## Group by number of publications
+
+Select only publications for the selected participants,
+for the years of interest.
+
+NOTE: publications are by author, so if there are multiple authors in ProfilesRNS, there will be multiple rows in the publications table, one for each person.
+
+
+```{r compute publication counts}
+pubs <- applicants %>% 
+  left_join(author_pubs, by=c("personid","personid")) %>% 
+  filter(year %in% params$start_year:params$end_year)
+
+pubcounts <- pubs %>% 
+  count(displayname, personid, grant_status, sort = TRUE) %>% 
+  rename(num_pubs = n)
+
+knitr::kable(head(pubcounts))
+```
+
+There are `r nrow(pubs)` publications for the selected people and years. Note: each publication appears once for each author in the selected set, so if the number of unique publications is less.
+
+## Create sampled data
+
+Divide each group (funded/unfunded) into quartiles based on number of publications.
+
+Using replace on sample size because otherwise the groups are too small.   The data is sampled taking equal numbers from each subgroup.
+
+```{r}
+breaks <- quantile(pubcounts$num_pubs, probs=seq(0, 1, by=0.25), na.rm=TRUE)
+
+pubcounts$quartile <- with(pubcounts,
+      cut(num_pubs, breaks = breaks, include.lowest = TRUE))
+
+# 5 for each group gives 20 each of unfunded/funded
+sample_size <- 5
+
+participants <- sample_n(pubcounts %>%
+      group_by(grant_status, quartile), sample_size, replace = TRUE)
+
+knitr::kable(participants)
+```
+
+
+
+## Select pubs for those applicants
+
+```{r select sampled publications}
+sampled_pubs <- participants %>% 
+  left_join(pubs, by=c("displayname","personid","grant_status"))
+
+knitr::kable(head(sampled_pubs %>% 
+                    select(displayname,
+                           num_pubs, 
+                           grant_status,
+                           quartile,
+                           author,
+                           pubdate
+                           )))
+```
+
+## Identify MeSH terms for these publications
+
+```{r identify mesh terms}
+
+mesh_pubs <- sampled_pubs %>% 
+  left_join(mesh, by=c("pmid","infoResource")) %>% 
+  select(personid, displayname, grant_status, quartile, pmid, bs_or_c, topic, minorTopic,
+         meshDescriptor, meshGroup)
+#print(colnames(mesh_pubs))
+knitr::kable(head(mesh_pubs))
+```
+
+## Get the groups
+
+```{r}
+by_mesh_group <- mesh_pubs %>% 
+  count(grant_status, meshGroup, sort = TRUE)
+knitr::kable(head(by_mesh_group))
+```
+
+## Plot
+
+```{r}
+ggplot(by_mesh_group) +
+  theme_minimal() +
+  #shape should be quartile?
+  geom_point(aes(x=as.factor(meshGroup),
+                 y = n, 
+                 color = grant_status,
+                 shape = quartile)) +
+  ylab("Mesh Group") +
+  coord_flip() +
+  ggtitle("Mesh Group by Applicant Status",
+          subtitle = "All available data") +
+  labs(caption = "Data from ProfilesRNS")
+```
+

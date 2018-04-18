@@ -1,0 +1,2 @@
+SELECT ?sub ?prop ?obj WHERE { ?sub ?prop ?obj . }
+

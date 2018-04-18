@@ -1,0 +1,9 @@
+PREFIX vivo: <http://vivoweb.org/ontology/core#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX prns: <http://profiles.catalyst.harvard.edu/ontology/prns#>
+
+SELECT ?sub ?lname ?fname WHERE { 
+  ?sub foaf:lastName ?lname . 
+  ?sub foaf:firstName ?fname . 
+}
+

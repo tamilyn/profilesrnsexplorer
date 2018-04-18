@@ -1,0 +1,13 @@
+PREFIX vivo: <http://vivoweb.org/ontology/core#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX prns: <http://profiles.catalyst.harvard.edu/ontology/prns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?author ?lname ?fname ?fullname ?personid ?label WHERE { 
+  ?author foaf:lastName ?lname . 
+  ?author foaf:firstName ?fname . 
+  ?author prns:fullName ?fullname. 
+  ?author prns:personId ?personid . 
+  ?author rdfs:label ?label . 
+}
+

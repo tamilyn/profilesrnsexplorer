@@ -1,0 +1,20 @@
+PREFIX vivo: <http://vivoweb.org/ontology/core#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX prns: <http://profiles.catalyst.harvard.edu/ontology/prns#>
+PREFIX bibo: <http://purl.org/ontology/bibo/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?title ?publicationVenue ?reference ?year ?pubdate ?pmid ?medlineTA ?authorship WHERE { 
+
+  ?infoResource rdfs:label ?title .
+  ?infoResource prns:informationResourceReference ?reference .
+  ?infoResource prns:hasPublicationVenue ?publicationVenue .
+  ?infoResource prns:year ?year .
+  ?infoResource prns:publicationDate ?pubdate .
+
+  ?infoResource vivo:informationResourceInAuthorship ?authorship .
+
+  ?infoResource prns:medlineTA ?medlineTA.
+  ?infoResource bibo:pmid ?pmid .
+}

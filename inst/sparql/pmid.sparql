@@ -1,0 +1,5 @@
+PREFIX bibo: <http://purl.org/ontology/bibo/>
+
+SELECT ?a ?pmid
+WHERE { ?a bibo:pmid ?pmid . }
+

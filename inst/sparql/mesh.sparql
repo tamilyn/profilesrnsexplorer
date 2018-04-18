@@ -1,0 +1,16 @@
+PREFIX vivo: <http://vivoweb.org/ontology/core#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX prns: <http://profiles.catalyst.harvard.edu/ontology/prns#>
+PREFIX bibo: <http://purl.org/ontology/bibo/>
+
+SELECT ?pmid ?infoResource ?topic ?minorTopic  ?meshDescriptor ?meshGroup
+WHERE { 
+  ?infoResource bibo:pmid ?pmid .
+
+  ?infoResource prns:hasSubjectAreaMajorTopicList ?topic. 
+  ?infoResource prns:hasSubjectAreaMinorTopicList ?minorTopic. 
+  ?infoResource vivo:hasSubjectArea ?subjectarea .
+
+  ?subjectarea prns:meshDescriptorUI ?meshDescriptor .
+  ?subjectarea prns:meshSemanticGroupName ?meshGroup .
+}

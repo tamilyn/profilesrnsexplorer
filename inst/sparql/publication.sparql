@@ -1,0 +1,11 @@
+PREFIX bibo: <http://purl.org/ontology/bibo/>
+PREFIX prns: <http://profiles.catalyst.harvard.edu/ontology/prns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+    SELECT ?a ?pmid ?authorList ?pubName ?pubDate ?title
+    WHERE { ?a bibo:pmid ?pmid .
+            ?a prns:hasAuthorList ?authorList .
+            ?a prns:hasPublicationVenue ?pubName .
+            ?a prns:publicationDate ?pubDate.
+            ?a rdfs:label ?title .
+    }
